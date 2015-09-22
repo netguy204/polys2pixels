@@ -123,6 +123,37 @@ class Renderer {
     }
   }
 
+  void render2(const Triangle& tri) {
+    int A01 = (tri.a.y - tri.b.y) * substep, B01 = (tri.b.x - tri.a.x) * substep;
+    int A12 = (tri.b.y - tri.c.y) * substep, B12 = (tri.c.x - tri.b.x) * substep;
+    int A20 = (tri.c.y - tri.a.y) * substep, B20 = (tri.a.x - tri.c.x) * substep;
+
+    const Point& p = bounds.ll * substep;
+    int w0_row = tri.orient(tri.b, tri.c, p);
+    int w1_row = tri.orient(tri.c, tri.a, p);
+    int w2_row = tri.orient(tri.a, tri.b, p);
+
+    for(int yy = bounds.ll.y; yy < bounds.ur.y; ++yy) {
+      int w0 = w0_row;
+      int w1 = w1_row;
+      int w2 = w2_row;
+
+      for(int xx = bounds.ll.x; xx < bounds.ur.x; ++xx) {
+        if((w0 | w1 | w2) >= 0) {
+          get(xx, yy) += 1;
+        }
+
+        w0 += A12;
+        w1 += A20;
+        w2 += A01;
+      }
+
+      w0_row += B12;
+      w1_row += B20;
+      w2_row += B01;
+    }
+  }
+
   void dump() {
     for(int yy = bounds.ll.y; yy < bounds.ur.y; ++yy) {
       for(int xx = bounds.ll.x; xx < bounds.ur.x; ++xx) {
@@ -148,5 +179,6 @@ int main(int argc, char** argv) {
   Renderer renderer(step, Rect(Point(0, 0), Point(sx, sy)));
   renderer.clear();
   renderer.render(tri);
+  renderer.render2(tri);
   renderer.dump();
 }
